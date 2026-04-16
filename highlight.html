@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Highlight — Daily Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Light mode — cream and sand */
+  --bg: #f5efe6;
+  --bg-elevated: #faf6ef;
+  --bg-overlay: rgba(245, 239, 230, 0.85);
+  --ink: #2d2a26;
+  --ink-soft: #6b6560;
+  --ink-faint: #a8a29a;
+  --line: rgba(45, 42, 38, 0.08);
+  --line-strong: rgba(45, 42, 38, 0.15);
+  --accent: #c77d5a;
+  --accent-soft: rgba(199, 125, 90, 0.12);
+  --shadow-sm: 0 1px 2px rgba(45, 42, 38, 0.04), 0 2px 8px rgba(45, 42, 38, 0.04);
+  --shadow-md: 0 4px 16px rgba(45, 42, 38, 0.08), 0 2px 4px rgba(45, 42, 38, 0.04);
+  --shadow-orb: 0 8px 32px rgba(45, 42, 38, 0.12), 0 2px 8px rgba(45, 42, 38, 0.06);
+
+  /* Pastel orb colors */
+  --orb-breakfast: #ffd9b8;   /* peach */
+  --orb-lunch: #fff4b5;        /* butter */
+  --orb-dinner: #c8e8d4;       /* mint */
+  --orb-low: #d4c5e8;           /* lavender */
+  --orb-highlight: #b8d8e8;    /* sky */
+
+  --orb-breakfast-deep: #f0a876;
+  --orb-lunch-deep: #e8c878;
+  --orb-dinner-deep: #8fc0a2;
+  --orb-low-deep: #a088c4;
+  --orb-highlight-deep: #7aa8c4;
+}
+
+[data-theme="dark"] {
+  --bg: #1a1715;
+  --bg-elevated: #24201c;
+  --bg-overlay: rgba(26, 23, 21, 0.85);
+  --ink: #f0e8dc;
+  --ink-soft: #a8a29a;
+  --ink-faint: #6b6560;
+  --line: rgba(240, 232, 220, 0.08);
+  --line-strong: rgba(240, 232, 220, 0.15);
+  --accent: #e09a78;
+  --accent-soft: rgba(224, 154, 120, 0.14);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-orb: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  --orb-breakfast: #c49070;
+  --orb-lunch: #c4b070;
+  --orb-dinner: #8fb094;
+  --orb-low: #9888b0;
+  --orb-highlight: #7a9cb0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  background: #0a0908;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: radial-gradient(ellipse at top, #1a1715 0%, #0a0908 100%);
+}
+
+/* Phone frame */
+.phone {
+  width: 100%;
+  max-width: 390px;
+  height: 100%;
+  max-height: 844px;
+  background: var(--bg);
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,0.04),
+    0 0 0 12px #1a1715,
+    0 0 0 14px rgba(255,255,255,0.06),
+    0 40px 80px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  transition: background 0.4s ease;
+}
+
+/* Status bar */
+.status-bar {
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  position: relative;
+  z-index: 10;
+}
+
+.status-bar .right {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+}
+
+/* Screen container */
+.screen {
+  flex: 1;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  position: relative;
+}
+.screen.active { display: flex; }
+
+/* Transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.screen.active > * { animation: fadeIn 0.4s ease both; }
+
+/* Header */
+.header {
+  padding: 12px 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.header-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.header h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.header h1 em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--accent);
+}
+
+/* ===== ONBOARDING ===== */
+#onboarding {
+  padding: 60px 32px 40px;
+  justify-content: space-between;
+}
+.onb-step { display: none; flex: 1; flex-direction: column; }
+.onb-step.active { display: flex; animation: fadeIn 0.5s ease both; }
+
+.onb-hero {
+  font-family: 'Fraunces', serif;
+  font-size: 52px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 20px;
+  color: var(--ink);
+}
+.onb-hero em {
+  font-style: italic;
+  color: var(--accent);
+}
+.onb-sub {
+  font-size: 16px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 40px;
+  max-width: 280px;
+}
+
+.onb-orbs {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 40px 0;
+  flex-wrap: wrap;
+}
+.onb-orb {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  animation: floatPulse 3s ease-in-out infinite;
+}
+.onb-orb:nth-child(1) { background: var(--orb-breakfast); animation-delay: 0s; }
+.onb-orb:nth-child(2) { background: var(--orb-lunch); animation-delay: 0.3s; }
+.onb-orb:nth-child(3) { background: var(--orb-dinner); animation-delay: 0.6s; }
+.onb-orb:nth-child(4) { background: var(--orb-low); animation-delay: 0.9s; }
+.onb-orb:nth-child(5) { background: var(--orb-highlight); animation-delay: 1.2s; }
+
+@keyframes floatPulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.05); }
+}
+
+.onb-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+
+/* PIN input */
+.pin-display {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin: 20px 0 32px;
+}
+.pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-strong);
+  transition: all 0.2s ease;
+}
+.pin-dot.filled {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.1);
+}
+
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 280px;
+  margin: 0 auto;
+}
+.pin-key {
+  aspect-ratio: 1.4;
+  border-radius: 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.pin-key:active { transform: scale(0.94); background: var(--accent-soft); }
+.pin-key.empty { background: transparent; border: none; cursor: default; }
+.pin-key.action {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+}
+
+.text-input {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  outline: none;
+  transition: all 0.2s ease;
+}
+.text-input:focus {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.text-input::placeholder { color: var(--ink-faint); }
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn:active { transform: scale(0.98); }
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 14px;
+}
+.btn-accent { background: var(--accent); color: white; }
+
+.error-msg {
+  color: #d4634d;
+  font-size: 13px;
+  text-align: center;
+  min-height: 18px;
+  margin-top: 8px;
+}
+
+/* ===== LOCK SCREEN ===== */
+#lock {
+  padding: 80px 32px 40px;
+  justify-content: space-between;
+  text-align: center;
+}
+.lock-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--orb-breakfast), var(--orb-lunch), var(--orb-dinner), var(--orb-low), var(--orb-highlight), var(--orb-breakfast));
+  margin: 0 auto 24px;
+  animation: spin 20s linear infinite;
+  box-shadow: var(--shadow-orb);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.lock-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+.lock-sub { color: var(--ink-soft); font-size: 14px; margin-bottom: 40px; }
+.lock-forgot {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin-top: 20px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+}
+
+/* ===== TODAY SCREEN (floating orbs) ===== */
+#today {
+  flex: 1;
+  position: relative;
+}
+.today-date {
+  position: absolute;
+  top: 20px;
+  left: 28px;
+  right: 28px;
+  z-index: 2;
+  pointer-events: none;
+}
+.today-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+.today-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.today-progress {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+
+.orb-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(45, 42, 38, 0.7);
+  padding: 12px;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  box-shadow: var(--shadow-orb);
+  will-change: transform;
+}
+[data-theme="dark"] .orb { color: rgba(26, 23, 21, 0.8); }
+
+.orb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  filter: blur(20px);
+  opacity: 0.4;
+  z-index: -1;
+  transform: scale(1.1);
+}
+
+.orb:active { transform: scale(0.95); }
+
+.orb.completed {
+  box-shadow: var(--shadow-orb), inset 0 0 0 3px rgba(255,255,255,0.5);
+}
+.orb.completed::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(45, 42, 38, 0.5);
+}
+
+.orb.skipped {
+  opacity: 0.5;
+}
+
+.orb[data-q="0"] { background: var(--orb-breakfast); }
+.orb[data-q="1"] { background: var(--orb-lunch); }
+.orb[data-q="2"] { background: var(--orb-dinner); }
+.orb[data-q="3"] { background: var(--orb-low); }
+.orb[data-q="4"] { background: var(--orb-highlight); }
+
+/* Ad banner */
+.ad-banner {
+  flex-shrink: 0;
+  height: 50px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--line),
+    var(--line) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.ad-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--bg-elevated);
+  opacity: 0.9;
+  z-index: -1;
+}
+.ad-banner { position: relative; }
+
+/* ===== QUESTION SCREEN ===== */
+#question {
+  padding: 20px 28px 32px;
+  justify-content: space-between;
+}
+
+.question-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+}
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background 0.2s ease;
+}
+.icon-btn:active { background: var(--accent-soft); }
+
+.question-dots {
+  display: flex;
+  gap: 8px;
+}
+.question-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  transition: all 0.3s ease;
+}
+.question-dot.active { background: var(--accent); transform: scale(1.3); }
+.question-dot.done { background: var(--accent); opacity: 0.5; }
+
+.question-orb-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  margin: 0 auto 32px;
+  box-shadow: var(--shadow-orb);
+  animation: floatPulse 3s ease-in-out infinite;
+}
+
+.question-text {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.question-text em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.question-kicker {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 32px;
+}
+
+.answer-input {
+  width: 100%;
+  min-height: 140px;
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  outline: none;
+  resize: none;
+  transition: all 0.2s ease;
+}
+.answer-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.question-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+.question-actions .btn { flex: 1; }
+
+/* ===== CALENDAR SCREEN ===== */
+#calendar {
+  padding: 0 0 0;
+}
+.cal-header {
+  padding: 12px 28px 20px;
+  flex-shrink: 0;
+}
+.cal-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.cal-month {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.cal-nav-btns { display: flex; gap: 4px; }
+
+.cal-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 28px 20px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.cal-dow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+  padding: 8px 0;
+}
+.cal-day {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+  position: relative;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+.cal-day:hover { background: var(--bg-elevated); }
+.cal-day.empty { cursor: default; }
+.cal-day.today { border-color: var(--accent); font-weight: 600; }
+.cal-day.has-entries {
+  background: var(--bg-elevated);
+}
+.cal-day .dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 3px;
+  height: 4px;
+}
+.cal-day .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
+.cal-day-detail {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.cal-day-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+.cal-entry {
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: background 0.15s ease;
+}
+.cal-entry:hover { background: var(--accent-soft); }
+.cal-entry-orb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.cal-entry-content { flex: 1; min-width: 0; }
+.cal-entry-q {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+.cal-entry-a {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.cal-entry-a.empty { color: var(--ink-faint); font-style: italic; }
+
+/* ===== SETTINGS SCREEN ===== */
+#settings {
+  padding: 0;
+}
+.settings-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 28px 20px;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+}
+.settings-section h3 {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.settings-group {
+  background: var(--bg-elevated);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  gap: 12px;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row:active { background: var(--accent-soft); }
+.settings-row-main { flex: 1; min-width: 0; }
+.settings-row-label {
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 400;
+}
+.settings-row-value {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.settings-row-chevron {
+  color: var(--ink-faint);
+  flex-shrink: 0;
+}
+
+/* Toggle */
+.toggle {
+  width: 48px;
+  height: 28px;
+  background: var(--line-strong);
+  border-radius: 14px;
+  position: relative;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle.on::after { transform: translateX(20px); }
+
+/* Modal */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  animation: fadeIn 0.2s ease both;
+}
+.modal-backdrop.active { display: flex; }
+.modal {
+  width: 100%;
+  background: var(--bg);
+  border-radius: 28px 28px 0 0;
+  padding: 24px 24px 32px;
+  max-height: 80%;
+  overflow-y: auto;
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--line-strong);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+.modal-sub {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+}
+
+.option-list { display: flex; flex-direction: column; gap: 4px; }
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.option-row:active, .option-row:hover { background: var(--bg-elevated); }
+.option-row.selected { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.option-check { opacity: 0; transition: opacity 0.2s ease; }
+.option-row.selected .option-check { opacity: 1; }
+
+/* Tab bar */
+.tab-bar {
+  flex-shrink: 0;
+  height: 78px;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--line);
+  display: flex;
+  padding: 8px 12px 20px;
+}
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 4px;
+}
+.tab.active { color: var(--accent); }
+.tab-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Toast */
+.toast {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 200;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Remove ads upgrade */
+.upgrade-card {
+  background: linear-gradient(135deg, var(--orb-breakfast), var(--orb-highlight));
+  border-radius: 18px;
+  padding: 20px;
+  color: rgba(45, 42, 38, 0.9);
+  margin-bottom: 20px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.upgrade-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+  border-radius: 50%;
+}
+.upgrade-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+.upgrade-sub { font-size: 13px; opacity: 0.8; }
+
+/* Helpful notes */
+.demo-note {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  max-width: 260px;
+  line-height: 1.4;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .demo-note { display: none; }
+  body { padding: 0; }
+  .phone {
+    max-width: 100%;
+    max-height: 100%;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="phone" data-theme="light">
+
+  <div class="status-bar">
+    <span id="statusTime">9:41</span>
+    <span class="right">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M1 3c0-1.1.9-2 2-2s2 .9 2 2v5c0 1.1-.9 2-2 2s-2-.9-2-2V3zm5-1c0-1.1.9-2 2-2s2 .9 2 2v7c0 1.1-.9 2-2 2s-2-.9-2-2V2zm5-1c0-1.1.9-2 2-2s2 .9 2 2v9c0 1.1-.9 2-2 2s-2-.9-2-2V1z"/></svg>
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="2" width="12" height="7" rx="1.5"/><rect x="2.5" y="3.5" width="9" height="4" rx="0.5" fill="currentColor"/><path d="M14 4v3"/></svg>
+    </span>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div class="screen" id="onboarding">
+    <div class="onb-step active" data-step="welcome">
+      <div style="flex:1; display: flex; flex-direction: column; justify-content: center;">
+        <div class="onb-orbs">
+          <div class="onb-orb"></div>
+          <div class="onb-orb"></div>
+          <div class="onb-orb"></div>
+          <div class="onb-orb"></div>
+          <div class="onb-orb"></div>
+        </div>
+        <div class="onb-hero" data-i18n="welcomeTitle">welcome to<br><em>highlight</em></div>
+        <div class="onb-sub" data-i18n="welcomeSub">Five small questions, once a day. A gentle way to remember.</div>
+      </div>
+      <button class="btn" onclick="onbNext('language')" data-i18n="getStarted">Get started</button>
+    </div>
+
+    <div class="onb-step" data-step="language">
+      <div class="onb-label" data-i18n="chooseLanguage">Choose your language</div>
+      <div class="onb-hero" style="font-size: 36px; margin-bottom: 24px;" data-i18n="languagePrompt">what language<br>do you <em>speak?</em></div>
+      <div style="flex:1; overflow-y: auto; margin: 0 -8px;">
+        <div class="option-list" id="langList"></div>
+      </div>
+      <button class="btn" onclick="onbNext('pin')" data-i18n="continueBtn" style="margin-top: 16px;">Continue</button>
+    </div>
+
+    <div class="onb-step" data-step="pin">
+      <div class="onb-label" data-i18n="createPin">Create a PIN</div>
+      <div class="onb-hero" style="font-size: 32px;" data-i18n="pinPrompt">four digits to <em>keep your journal private</em></div>
+      <div class="pin-display" id="pinDisplay">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+      <div class="error-msg" id="pinError"></div>
+      <div class="pin-pad" id="pinPad"></div>
+    </div>
+
+    <div class="onb-step" data-step="email">
+      <div class="onb-label" data-i18n="recoveryEmail">PIN recovery</div>
+      <div class="onb-hero" style="font-size: 32px;" data-i18n="emailPrompt">your <em>email</em></div>
+      <div class="onb-sub" data-i18n="emailSub">Used only to reset your PIN if you forget it. We will not email you otherwise.</div>
+      <input type="email" class="text-input" id="emailInput" placeholder="you@example.com" autocomplete="email">
+      <div class="error-msg" id="emailError"></div>
+      <div style="flex:1;"></div>
+      <button class="btn" onclick="onbNext('done')" data-i18n="finishSetup">Finish setup</button>
+    </div>
+  </div>
+
+  <!-- LOCK SCREEN -->
+  <div class="screen" id="lock">
+    <div style="flex:1;">
+      <div class="lock-logo"></div>
+      <div class="lock-title" data-i18n="lockTitle">Highlight</div>
+      <div class="lock-sub" data-i18n="lockSub">Enter your PIN</div>
+      <div class="pin-display" id="lockPinDisplay">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+      <div class="error-msg" id="lockError"></div>
+      <div class="pin-pad" id="lockPinPad"></div>
+      <div class="lock-forgot" onclick="showForgotPin()" data-i18n="forgotPin">Forgot PIN?</div>
+    </div>
+  </div>
+
+  <!-- TODAY -->
+  <div class="screen" id="today">
+    <div class="today-date">
+      <div class="today-eyebrow" id="todayDate"></div>
+      <div class="today-title" data-i18n="todayTitle">Today</div>
+      <div class="today-progress" id="todayProgress"></div>
+    </div>
+    <div class="orb-field" id="orbField"></div>
+    <div class="ad-banner" data-i18n="adPlaceholder">Advertisement</div>
+    <div class="tab-bar" id="tabBar"></div>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="screen" id="question">
+    <div class="question-top">
+      <button class="icon-btn" onclick="closeQuestion()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="question-dots" id="questionDots"></div>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="question-orb-preview" id="questionOrb"></div>
+    <div class="question-text" id="questionText"></div>
+    <div class="question-kicker" id="questionKicker"></div>
+    <textarea class="answer-input" id="answerInput" placeholder=""></textarea>
+    <div class="question-actions">
+      <button class="btn btn-ghost" onclick="skipQuestion()" data-i18n="skipBtn">Skip</button>
+      <button class="btn" onclick="saveAnswer()" data-i18n="saveBtn">Save</button>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="screen" id="calendar">
+    <div class="cal-header">
+      <div class="today-eyebrow" data-i18n="calendarEyebrow">Your days</div>
+      <div class="cal-month-nav">
+        <div class="cal-month" id="calMonthLabel"></div>
+        <div class="cal-nav-btns">
+          <button class="icon-btn" onclick="changeMonth(-1)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="icon-btn" onclick="changeMonth(1)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="cal-scroll">
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-day-detail" id="calDayDetail"></div>
+    </div>
+    <div class="ad-banner" data-i18n="adPlaceholder">Advertisement</div>
+    <div class="tab-bar"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="settings">
+    <div class="header">
+      <div class="header-eyebrow" data-i18n="settingsEyebrow">Your preferences</div>
+      <h1 data-i18n="settingsTitle">Settings</h1>
+    </div>
+    <div class="settings-scroll" id="settingsContent"></div>
+    <div class="ad-banner" data-i18n="adPlaceholder">Advertisement</div>
+    <div class="tab-bar"></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal" id="modalBody"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<div class="demo-note">
+  Prototype demo. Data persists for this session only. In the real app, entries are stored locally on the device.
+</div>
+
+<script>
+// ===== I18N =====
+const i18n = {
+  en: {
+    welcomeTitle: 'welcome to<br><em>highlight</em>',
+    welcomeSub: 'Five small questions, once a day. A gentle way to remember.',
+    getStarted: 'Get started',
+    chooseLanguage: 'Choose your language',
+    languagePrompt: 'what language<br>do you <em>speak?</em>',
+    continueBtn: 'Continue',
+    createPin: 'Create a PIN',
+    pinPrompt: 'four digits to <em>keep your journal private</em>',
+    recoveryEmail: 'PIN recovery',
+    emailPrompt: 'your <em>email</em>',
+    emailSub: 'Used only to reset your PIN if you forget it. We will not email you otherwise.',
+    finishSetup: 'Finish setup',
+    lockTitle: 'Highlight',
+    lockSub: 'Enter your PIN',
+    forgotPin: 'Forgot PIN?',
+    todayTitle: 'Today',
+    settingsEyebrow: 'Your preferences',
+    settingsTitle: 'Settings',
+    calendarEyebrow: 'Your days',
+    skipBtn: 'Skip',
+    saveBtn: 'Save',
+    adPlaceholder: 'Advertisement',
+    q0: 'What did you have for <em>breakfast?</em>',
+    q1: 'What did you have for <em>lunch?</em>',
+    q2: 'What did you have for <em>dinner?</em>',
+    q3: 'What was a <em>low point</em> of your day?',
+    q4: 'What was a <em>highlight</em> of your day?',
+    q0short: 'Breakfast', q1short: 'Lunch', q2short: 'Dinner', q3short: 'Low', q4short: 'Highlight',
+    kicker0: 'Take your time. Even a bite counts.',
+    kicker1: 'A quick note is enough.',
+    kicker2: 'What warmed you up?',
+    kicker3: 'Naming it softens it.',
+    kicker4: 'A moment that mattered.',
+    tabToday: 'Today', tabCalendar: 'Calendar', tabSettings: 'Settings',
+    completed: '{n} of {t} complete',
+    allDone: 'All done for today ✨',
+    appearance: 'Appearance',
+    darkMode: 'Dark mode',
+    notifications: 'Notifications',
+    dailyReminder: 'Daily reminder',
+    reminderTime: 'Reminder time',
+    language: 'Language',
+    questions: 'Questions',
+    customizeQuestions: 'Customize questions',
+    addCustomQ: 'Add a custom question',
+    security: 'Security',
+    changePin: 'Change PIN',
+    recoveryEmailLabel: 'Recovery email',
+    data: 'Data',
+    exportCsv: 'Export as CSV',
+    exportTxt: 'Export as TXT',
+    backup: 'Backup to cloud',
+    restore: 'Restore from backup',
+    removeAds: 'Remove ads',
+    removeAdsSub: 'One-time $4 — keep forever',
+    adsRemoved: 'Ads removed',
+    about: 'About',
+    version: 'Version 1.0',
+    monthNames: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    dowShort: ['S','M','T','W','T','F','S'],
+    noEntries: 'No entries for this day',
+    pickADay: 'Pick a day to see your entries',
+    edit: 'Edit',
+    skipped: '(skipped)',
+    enterValidEmail: 'Please enter a valid email',
+    pinsDontMatch: 'PINs do not match',
+    confirmPin: 'Confirm your PIN',
+    wrongPin: 'Wrong PIN',
+    toast_saved: 'Saved',
+    toast_skipped: 'Skipped',
+    toast_export: 'Export ready — in the real app, this downloads a file',
+    toast_backup: 'Backup ready — in the real app, this uploads to iCloud or Google Drive',
+    toast_demo: 'Demo prototype — this would work in the native app',
+  },
+  es: {
+    welcomeTitle: 'bienvenido a<br><em>highlight</em>',
+    welcomeSub: 'Cinco preguntas breves, una vez al día. Una forma gentil de recordar.',
+    getStarted: 'Comenzar',
+    chooseLanguage: 'Elige tu idioma',
+    languagePrompt: '¿qué idioma<br><em>hablas?</em>',
+    continueBtn: 'Continuar',
+    createPin: 'Crea un PIN',
+    pinPrompt: 'cuatro dígitos para <em>mantener tu diario privado</em>',
+    recoveryEmail: 'Recuperación de PIN',
+    emailPrompt: 'tu <em>correo</em>',
+    emailSub: 'Solo se usa para restablecer tu PIN si lo olvidas. No te enviaremos correos.',
+    finishSetup: 'Finalizar',
+    lockTitle: 'Highlight',
+    lockSub: 'Ingresa tu PIN',
+    forgotPin: '¿Olvidaste tu PIN?',
+    todayTitle: 'Hoy',
+    settingsEyebrow: 'Tus preferencias',
+    settingsTitle: 'Ajustes',
+    calendarEyebrow: 'Tus días',
+    skipBtn: 'Omitir',
+    saveBtn: 'Guardar',
+    adPlaceholder: 'Anuncio',
+    q0: '¿Qué desayunaste <em>hoy?</em>',
+    q1: '¿Qué <em>almorzaste?</em>',
+    q2: '¿Qué <em>cenaste?</em>',
+    q3: '¿Cuál fue un <em>momento difícil</em> de tu día?',
+    q4: '¿Cuál fue el <em>momento destacado</em> de tu día?',
+    q0short: 'Desayuno', q1short: 'Almuerzo', q2short: 'Cena', q3short: 'Bajón', q4short: 'Destacado',
+    kicker0: 'Tómate tu tiempo. Hasta un bocado cuenta.',
+    kicker1: 'Una nota rápida basta.',
+    kicker2: '¿Qué te reconfortó?',
+    kicker3: 'Nombrarlo lo suaviza.',
+    kicker4: 'Un momento que importó.',
+    tabToday: 'Hoy', tabCalendar: 'Calendario', tabSettings: 'Ajustes',
+    completed: '{n} de {t} completos',
+    allDone: 'Todo listo por hoy ✨',
+    appearance: 'Apariencia',
+    darkMode: 'Modo oscuro',
+    notifications: 'Notificaciones',
+    dailyReminder: 'Recordatorio diario',
+    reminderTime: 'Hora del recordatorio',
+    language: 'Idioma',
+    questions: 'Preguntas',
+    customizeQuestions: 'Personalizar preguntas',
+    addCustomQ: 'Añadir pregunta',
+    security: 'Seguridad',
+    changePin: 'Cambiar PIN',
+    recoveryEmailLabel: 'Correo de recuperación',
+    data: 'Datos',
+    exportCsv: 'Exportar como CSV',
+    exportTxt: 'Exportar como TXT',
+    backup: 'Respaldar en la nube',
+    restore: 'Restaurar respaldo',
+    removeAds: 'Quitar anuncios',
+    removeAdsSub: 'Pago único de $4 — para siempre',
+    adsRemoved: 'Anuncios eliminados',
+    about: 'Acerca de',
+    version: 'Versión 1.0',
+    monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+    dowShort: ['D','L','M','M','J','V','S'],
+    noEntries: 'Sin entradas para este día',
+    pickADay: 'Elige un día para ver tus entradas',
+    edit: 'Editar',
+    skipped: '(omitida)',
+    enterValidEmail: 'Ingresa un correo válido',
+    pinsDontMatch: 'Los PIN no coinciden',
+    confirmPin: 'Confirma tu PIN',
+    wrongPin: 'PIN incorrecto',
+    toast_saved: 'Guardado',
+    toast_skipped: 'Omitido',
+    toast_export: 'Exportación lista — en la app real, esto descarga un archivo',
+    toast_backup: 'Respaldo listo — en la app real, esto sube a iCloud o Google Drive',
+    toast_demo: 'Prototipo demo — funcionaría en la app nativa',
+  },
+  'zh-CN': {
+    welcomeTitle: '欢迎来到<br><em>highlight</em>',
+    welcomeSub: '每天五个小问题。温柔的记录方式。',
+    getStarted: '开始',
+    chooseLanguage: '选择你的语言',
+    languagePrompt: '你说<em>哪种语言？</em>',
+    continueBtn: '继续',
+    createPin: '设置密码',
+    pinPrompt: '四位数字<em>保护你的日记</em>',
+    recoveryEmail: '密码找回',
+    emailPrompt: '你的<em>邮箱</em>',
+    emailSub: '仅用于忘记密码时重置。我们不会发送其他邮件。',
+    finishSetup: '完成设置',
+    lockTitle: 'Highlight',
+    lockSub: '输入密码',
+    forgotPin: '忘记密码？',
+    todayTitle: '今天',
+    settingsEyebrow: '你的偏好',
+    settingsTitle: '设置',
+    calendarEyebrow: '你的日记',
+    skipBtn: '跳过',
+    saveBtn: '保存',
+    adPlaceholder: '广告',
+    q0: '你<em>早餐</em>吃了什么？',
+    q1: '你<em>午餐</em>吃了什么？',
+    q2: '你<em>晚餐</em>吃了什么？',
+    q3: '今天的<em>低谷</em>是什么？',
+    q4: '今天的<em>亮点</em>是什么？',
+    q0short: '早餐', q1short: '午餐', q2short: '晚餐', q3short: '低谷', q4short: '亮点',
+    kicker0: '慢慢来。一口也算数。',
+    kicker1: '简单记录一下就好。',
+    kicker2: '是什么温暖了你？',
+    kicker3: '说出来就轻了一些。',
+    kicker4: '值得记住的时刻。',
+    tabToday: '今天', tabCalendar: '日历', tabSettings: '设置',
+    completed: '已完成 {n}/{t}',
+    allDone: '今天都记完了 ✨',
+    appearance: '外观',
+    darkMode: '深色模式',
+    notifications: '通知',
+    dailyReminder: '每日提醒',
+    reminderTime: '提醒时间',
+    language: '语言',
+    questions: '问题',
+    customizeQuestions: '自定义问题',
+    addCustomQ: '添加问题',
+    security: '安全',
+    changePin: '更改密码',
+    recoveryEmailLabel: '找回邮箱',
+    data: '数据',
+    exportCsv: '导出为 CSV',
+    exportTxt: '导出为 TXT',
+    backup: '云端备份',
+    restore: '从备份恢复',
+    removeAds: '移除广告',
+    removeAdsSub: '一次性 $4 — 永久',
+    adsRemoved: '广告已移除',
+    about: '关于',
+    version: '版本 1.0',
+    monthNames: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'],
+    dowShort: ['日','一','二','三','四','五','六'],
+    noEntries: '这一天没有记录',
+    pickADay: '选择一天查看记录',
+    edit: '编辑',
+    skipped: '（已跳过）',
+    enterValidEmail: '请输入有效邮箱',
+    pinsDontMatch: '密码不匹配',
+    confirmPin: '再次输入密码',
+    wrongPin: '密码错误',
+    toast_saved: '已保存',
+    toast_skipped: '已跳过',
+    toast_export: '导出完成 — 实际应用中会下载文件',
+    toast_backup: '备份完成 — 实际应用中会上传到云端',
+    toast_demo: '原型演示 — 实际应用中可用',
+  },
+  'zh-TW': {
+    welcomeTitle: '歡迎來到<br><em>highlight</em>',
+    welcomeSub: '每天五個小問題。溫柔的記錄方式。',
+    getStarted: '開始',
+    chooseLanguage: '選擇你的語言',
+    languagePrompt: '你說<em>哪種語言？</em>',
+    continueBtn: '繼續',
+    createPin: '設定密碼',
+    pinPrompt: '四位數字<em>保護你的日記</em>',
+    recoveryEmail: '密碼找回',
+    emailPrompt: '你的<em>電子郵件</em>',
+    emailSub: '僅用於忘記密碼時重設。我們不會寄送其他郵件。',
+    finishSetup: '完成設定',
+    lockTitle: 'Highlight',
+    lockSub: '輸入密碼',
+    forgotPin: '忘記密碼？',
+    todayTitle: '今天',
+    settingsEyebrow: '你的偏好',
+    settingsTitle: '設定',
+    calendarEyebrow: '你的日記',
+    skipBtn: '跳過',
+    saveBtn: '儲存',
+    adPlaceholder: '廣告',
+    q0: '你<em>早餐</em>吃了什麼？',
+    q1: '你<em>午餐</em>吃了什麼？',
+    q2: '你<em>晚餐</em>吃了什麼？',
+    q3: '今天的<em>低谷</em>是什麼？',
+    q4: '今天的<em>亮點</em>是什麼？',
+    q0short: '早餐', q1short: '午餐', q2short: '晚餐', q3short: '低谷', q4short: '亮點',
+    kicker0: '慢慢來。一口也算數。',
+    kicker1: '簡單記錄一下就好。',
+    kicker2: '是什麼溫暖了你？',
+    kicker3: '說出來就輕了一些。',
+    kicker4: '值得記住的時刻。',
+    tabToday: '今天', tabCalendar: '日曆', tabSettings: '設定',
+    completed: '已完成 {n}/{t}',
+    allDone: '今天都記完了 ✨',
+    appearance: '外觀',
+    darkMode: '深色模式',
+    notifications: '通知',
+    dailyReminder: '每日提醒',
+    reminderTime: '提醒時間',
+    language: '語言',
+    questions: '問題',
+    customizeQuestions: '自訂問題',
+    addCustomQ: '新增問題',
+    security: '安全',
+    changePin: '變更密碼',
+    recoveryEmailLabel: '找回信箱',
+    data: '資料',
+    exportCsv: '匯出為 CSV',
+    exportTxt: '匯出為 TXT',
+    backup: '雲端備份',
+    restore: '從備份還原',
+    removeAds: '移除廣告',
+    removeAdsSub: '一次性 $4 — 永久',
+    adsRemoved: '廣告已移除',
+    about: '關於',
+    version: '版本 1.0',
+    monthNames: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'],
+    dowShort: ['日','一','二','三','四','五','六'],
+    noEntries: '這一天沒有記錄',
+    pickADay: '選擇一天查看記錄',
+    edit: '編輯',
+    skipped: '（已跳過）',
+    enterValidEmail: '請輸入有效的電子郵件',
+    pinsDontMatch: '密碼不相符',
+    confirmPin: '再次輸入密碼',
+    wrongPin: '密碼錯誤',
+    toast_saved: '已儲存',
+    toast_skipped: '已跳過',
+    toast_export: '匯出完成 — 實際應用中會下載檔案',
+    toast_backup: '備份完成 — 實際應用中會上傳至雲端',
+    toast_demo: '原型展示 — 實際應用中可用',
+  },
+  yue: {
+    welcomeTitle: '歡迎來到<br><em>highlight</em>',
+    welcomeSub: '每日五條小問題。輕輕記低每一日。',
+    getStarted: '開始',
+    chooseLanguage: '揀你嘅語言',
+    languagePrompt: '你講<em>邊種話？</em>',
+    continueBtn: '繼續',
+    createPin: '設定密碼',
+    pinPrompt: '四個數字<em>保護你本日記</em>',
+    recoveryEmail: '密碼復原',
+    emailPrompt: '你嘅<em>電郵</em>',
+    emailSub: '淨係喺你唔記得密碼嗰陣用。我哋唔會發其他電郵俾你。',
+    finishSetup: '完成',
+    lockTitle: 'Highlight',
+    lockSub: '輸入密碼',
+    forgotPin: '唔記得密碼？',
+    todayTitle: '今日',
+    settingsEyebrow: '你嘅偏好',
+    settingsTitle: '設定',
+    calendarEyebrow: '你嘅日子',
+    skipBtn: '跳過',
+    saveBtn: '儲存',
+    adPlaceholder: '廣告',
+    q0: '你<em>早餐</em>食咗啲乜？',
+    q1: '你<em>午餐</em>食咗啲乜？',
+    q2: '你<em>晚餐</em>食咗啲乜？',
+    q3: '今日有乜嘢<em>唔開心</em>？',
+    q4: '今日有乜嘢<em>亮點</em>？',
+    q0short: '早餐', q1short: '晏晝', q2short: '晚餐', q3short: '低谷', q4short: '亮點',
+    kicker0: '慢慢嚟。一啖都得。',
+    kicker1: '簡單寫兩句就夠。',
+    kicker2: '乜嘢令你暖到？',
+    kicker3: '講出嚟會輕啲。',
+    kicker4: '值得記住嘅時刻。',
+    tabToday: '今日', tabCalendar: '日曆', tabSettings: '設定',
+    completed: '完成咗 {n}/{t}',
+    allDone: '今日記晒喇 ✨',
+    appearance: '外觀',
+    darkMode: '深色模式',
+    notifications: '通知',
+    dailyReminder: '每日提醒',
+    reminderTime: '提醒時間',
+    language: '語言',
+    questions: '問題',
+    customizeQuestions: '自訂問題',
+    addCustomQ: '加問題',
+    security: '安全',
+    changePin: '改密碼',
+    recoveryEmailLabel: '復原電郵',
+    data: '資料',
+    exportCsv: '匯出做 CSV',
+    exportTxt: '匯出做 TXT',
+    backup: '雲端備份',
+    restore: '從備份還原',
+    removeAds: '移除廣告',
+    removeAdsSub: '一次過 $4 — 永久',
+    adsRemoved: '廣告已移除',
+    about: '關於',
+    version: '版本 1.0',
+    monthNames: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'],
+    dowShort: ['日','一','二','三','四','五','六'],
+    noEntries: '呢日冇記錄',
+    pickADay: '揀一日睇你嘅記錄',
+    edit: '編輯',
+    skipped: '（跳過咗）',
+    enterValidEmail: '請輸入有效電郵',
+    pinsDontMatch: '密碼唔啱',
+    confirmPin: '再入一次密碼',
+    wrongPin: '密碼錯誤',
+    toast_saved: '已儲存',
+    toast_skipped: '跳過咗',
+    toast_export: '匯出完成 — 實際 app 入面會下載檔案',
+    toast_backup: '備份完成 — 實際 app 入面會上傳去雲端',
+    toast_demo: '原型示範 — 實際 app 入面先用到',
+  },
+  tl: {
+    welcomeTitle: 'maligayang pagdating sa<br><em>highlight</em>',
+    welcomeSub: 'Limang maikling tanong bawat araw. Malumanay na paraan ng pag-alala.',
+    getStarted: 'Magsimula',
+    chooseLanguage: 'Piliin ang iyong wika',
+    languagePrompt: 'anong <em>wika</em><br>ang sinasalita mo?',
+    continueBtn: 'Magpatuloy',
+    createPin: 'Gumawa ng PIN',
+    pinPrompt: 'apat na digit para <em>maging pribado ang journal mo</em>',
+    recoveryEmail: 'Pagbawi ng PIN',
+    emailPrompt: 'ang iyong <em>email</em>',
+    emailSub: 'Gagamitin lamang para i-reset ang PIN kung makalimutan mo. Hindi ka namin e-emailan.',
+    finishSetup: 'Tapusin',
+    lockTitle: 'Highlight',
+    lockSub: 'Ilagay ang iyong PIN',
+    forgotPin: 'Nakalimutan ang PIN?',
+    todayTitle: 'Ngayon',
+    settingsEyebrow: 'Mga kagustuhan',
+    settingsTitle: 'Settings',
+    calendarEyebrow: 'Ang iyong mga araw',
+    skipBtn: 'Laktawan',
+    saveBtn: 'I-save',
+    adPlaceholder: 'Ad',
+    q0: 'Ano ang kinain mo sa <em>almusal?</em>',
+    q1: 'Ano ang kinain mo sa <em>tanghalian?</em>',
+    q2: 'Ano ang kinain mo sa <em>hapunan?</em>',
+    q3: 'Ano ang <em>mabigat na sandali</em> ng araw mo?',
+    q4: 'Ano ang <em>highlight</em> ng araw mo?',
+    q0short: 'Almusal', q1short: 'Tanghali', q2short: 'Hapunan', q3short: 'Mabigat', q4short: 'Highlight',
+    kicker0: 'Dahan-dahan lang. Kahit isang kagat bilang.',
+    kicker1: 'Sapat na ang mabilis na tala.',
+    kicker2: 'Ano ang nakapagpainit sa iyo?',
+    kicker3: 'Ang pagbigkas ay nagpapagaan.',
+    kicker4: 'Isang sandaling mahalaga.',
+    tabToday: 'Ngayon', tabCalendar: 'Kalendaryo', tabSettings: 'Settings',
+    completed: '{n} sa {t} tapos na',
+    allDone: 'Tapos na para ngayong araw ✨',
+    appearance: 'Itsura',
+    darkMode: 'Dark mode',
+    notifications: 'Mga abiso',
+    dailyReminder: 'Pang-araw-araw na paalala',
+    reminderTime: 'Oras ng paalala',
+    language: 'Wika',
+    questions: 'Mga tanong',
+    customizeQuestions: 'I-customize ang mga tanong',
+    addCustomQ: 'Magdagdag ng tanong',
+    security: 'Seguridad',
+    changePin: 'Palitan ang PIN',
+    recoveryEmailLabel: 'Email ng pagbawi',
+    data: 'Data',
+    exportCsv: 'I-export bilang CSV',
+    exportTxt: 'I-export bilang TXT',
+    backup: 'I-backup sa cloud',
+    restore: 'I-restore mula sa backup',
+    removeAds: 'Alisin ang mga ad',
+    removeAdsSub: 'Isang beses na $4 — habambuhay',
+    adsRemoved: 'Inalis ang mga ad',
+    about: 'Tungkol sa',
+    version: 'Bersyon 1.0',
+    monthNames: ['Enero','Pebrero','Marso','Abril','Mayo','Hunyo','Hulyo','Agosto','Setyembre','Oktubre','Nobyembre','Disyembre'],
+    dowShort: ['L','L','M','M','H','B','S'],
+    noEntries: 'Walang entry para sa araw na ito',
+    pickADay: 'Pumili ng araw para makita ang mga entry',
+    edit: 'I-edit',
+    skipped: '(nilaktawan)',
+    enterValidEmail: 'Magpasok ng wastong email',
+    pinsDontMatch: 'Hindi tugma ang PIN',
+    confirmPin: 'Kumpirmahin ang iyong PIN',
+    wrongPin: 'Maling PIN',
+    toast_saved: 'Na-save',
+    toast_skipped: 'Nilaktawan',
+    toast_export: 'Handa na ang export — sa totoong app ay mag-da-download ito',
+    toast_backup: 'Handa na ang backup — sa totoong app ay mag-u-upload ito sa cloud',
+    toast_demo: 'Prototype — gagana ito sa native app',
+  },
+  vi: {
+    welcomeTitle: 'chào mừng đến với<br><em>highlight</em>',
+    welcomeSub: 'Năm câu hỏi nhỏ mỗi ngày. Cách ghi nhớ nhẹ nhàng.',
+    getStarted: 'Bắt đầu',
+    chooseLanguage: 'Chọn ngôn ngữ',
+    languagePrompt: 'bạn nói<br><em>ngôn ngữ nào?</em>',
+    continueBtn: 'Tiếp tục',
+    createPin: 'Tạo mã PIN',
+    pinPrompt: 'bốn chữ số để <em>giữ nhật ký riêng tư</em>',
+    recoveryEmail: 'Khôi phục PIN',
+    emailPrompt: 'email của <em>bạn</em>',
+    emailSub: 'Chỉ dùng để đặt lại PIN nếu bạn quên. Chúng tôi sẽ không gửi email khác.',
+    finishSetup: 'Hoàn tất',
+    lockTitle: 'Highlight',
+    lockSub: 'Nhập mã PIN',
+    forgotPin: 'Quên PIN?',
+    todayTitle: 'Hôm nay',
+    settingsEyebrow: 'Tùy chọn của bạn',
+    settingsTitle: 'Cài đặt',
+    calendarEyebrow: 'Những ngày của bạn',
+    skipBtn: 'Bỏ qua',
+    saveBtn: 'Lưu',
+    adPlaceholder: 'Quảng cáo',
+    q0: 'Bạn đã ăn <em>sáng</em> gì?',
+    q1: 'Bạn đã ăn <em>trưa</em> gì?',
+    q2: 'Bạn đã ăn <em>tối</em> gì?',
+    q3: '<em>Khoảnh khắc khó khăn</em> trong ngày của bạn là gì?',
+    q4: '<em>Điểm nổi bật</em> trong ngày của bạn là gì?',
+    q0short: 'Sáng', q1short: 'Trưa', q2short: 'Tối', q3short: 'Khó', q4short: 'Nổi bật',
+    kicker0: 'Cứ thong thả. Một miếng cũng đáng kể.',
+    kicker1: 'Một dòng ngắn cũng đủ.',
+    kicker2: 'Điều gì đã sưởi ấm bạn?',
+    kicker3: 'Gọi tên nó giúp nhẹ lòng.',
+    kicker4: 'Một khoảnh khắc đáng nhớ.',
+    tabToday: 'Hôm nay', tabCalendar: 'Lịch', tabSettings: 'Cài đặt',
+    completed: 'Hoàn thành {n}/{t}',
+    allDone: 'Xong hết hôm nay ✨',
+    appearance: 'Giao diện',
+    darkMode: 'Chế độ tối',
+    notifications: 'Thông báo',
+    dailyReminder: 'Nhắc hàng ngày',
+    reminderTime: 'Thời gian nhắc',
+    language: 'Ngôn ngữ',
+    questions: 'Câu hỏi',
+    customizeQuestions: 'Tùy chỉnh câu hỏi',
+    addCustomQ: 'Thêm câu hỏi',
+    security: 'Bảo mật',
+    changePin: 'Đổi PIN',
+    recoveryEmailLabel: 'Email khôi phục',
+    data: 'Dữ liệu',
+    exportCsv: 'Xuất CSV',
+    exportTxt: 'Xuất TXT',
+    backup: 'Sao lưu lên đám mây',
+    restore: 'Khôi phục từ sao lưu',
+    removeAds: 'Xóa quảng cáo',
+    removeAdsSub: 'Trả một lần $4 — giữ mãi',
+    adsRemoved: 'Đã xóa quảng cáo',
+    about: 'Giới thiệu',
+    version: 'Phiên bản 1.0',
+    monthNames: ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'],
+    dowShort: ['CN','T2','T3','T4','T5','T6','T7'],
+    noEntries: 'Không có ghi chú cho ngày này',
+    pickADay: 'Chọn một ngày để xem ghi chú',
+    edit: 'Sửa',
+    skipped: '(đã bỏ qua)',
+    enterValidEmail: 'Vui lòng nhập email hợp lệ',
+    pinsDontMatch: 'PIN không khớp',
+    confirmPin: 'Xác nhận PIN',
+    wrongPin: 'PIN sai',
+    toast_saved: 'Đã lưu',
+    toast_skipped: 'Đã bỏ qua',
+    toast_export: 'Sẵn sàng xuất — trong ứng dụng thật sẽ tải tệp',
+    toast_backup: 'Sẵn sàng sao lưu — trong ứng dụng thật sẽ tải lên đám mây',
+    toast_demo: 'Bản thử — sẽ hoạt động trong ứng dụng gốc',
+  },
+  fr: {
+    welcomeTitle: 'bienvenue sur<br><em>highlight</em>',
+    welcomeSub: 'Cinq petites questions, une fois par jour. Une façon douce de se souvenir.',
+    getStarted: 'Commencer',
+    chooseLanguage: 'Choisissez votre langue',
+    languagePrompt: 'quelle langue<br><em>parlez-vous ?</em>',
+    continueBtn: 'Continuer',
+    createPin: 'Créer un code',
+    pinPrompt: 'quatre chiffres pour <em>garder votre journal privé</em>',
+    recoveryEmail: 'Récupération du code',
+    emailPrompt: 'votre <em>email</em>',
+    emailSub: 'Utilisé uniquement pour réinitialiser votre code si vous l\'oubliez. Aucun autre email.',
+    finishSetup: 'Terminer',
+    lockTitle: 'Highlight',
+    lockSub: 'Entrez votre code',
+    forgotPin: 'Code oublié ?',
+    todayTitle: 'Aujourd\'hui',
+    settingsEyebrow: 'Vos préférences',
+    settingsTitle: 'Réglages',
+    calendarEyebrow: 'Vos jours',
+    skipBtn: 'Passer',
+    saveBtn: 'Enregistrer',
+    adPlaceholder: 'Publicité',
+    q0: 'Qu\'avez-vous mangé au <em>petit-déjeuner ?</em>',
+    q1: 'Qu\'avez-vous mangé au <em>déjeuner ?</em>',
+    q2: 'Qu\'avez-vous mangé au <em>dîner ?</em>',
+    q3: 'Quel a été un <em>moment difficile</em> de votre journée ?',
+    q4: 'Quel a été le <em>temps fort</em> de votre journée ?',
+    q0short: 'Petit-déj', q1short: 'Déjeuner', q2short: 'Dîner', q3short: 'Bas', q4short: 'Temps fort',
+    kicker0: 'Prenez votre temps. Une bouchée compte.',
+    kicker1: 'Une note rapide suffit.',
+    kicker2: 'Qu\'est-ce qui vous a réchauffé ?',
+    kicker3: 'Le nommer l\'adoucit.',
+    kicker4: 'Un moment qui a compté.',
+    tabToday: 'Aujourd\'hui', tabCalendar: 'Calendrier', tabSettings: 'Réglages',
+    completed: '{n} sur {t} terminés',
+    allDone: 'Journée bouclée ✨',
+    appearance: 'Apparence',
+    darkMode: 'Mode sombre',
+    notifications: 'Notifications',
+    dailyReminder: 'Rappel quotidien',
+    reminderTime: 'Heure du rappel',
+    language: 'Langue',
+    questions: 'Questions',
+    customizeQuestions: 'Personnaliser les questions',
+    addCustomQ: 'Ajouter une question',
+    security: 'Sécurité',
+    changePin: 'Changer le code',
+    recoveryEmailLabel: 'Email de récupération',
+    data: 'Données',
+    exportCsv: 'Exporter en CSV',
+    exportTxt: 'Exporter en TXT',
+    backup: 'Sauvegarde dans le cloud',
+    restore: 'Restaurer',
+    removeAds: 'Retirer les publicités',
+    removeAdsSub: 'Paiement unique de 4 $ — pour toujours',
+    adsRemoved: 'Publicités retirées',
+    about: 'À propos',
+    version: 'Version 1.0',
+    monthNames: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+    dowShort: ['D','L','M','M','J','V','S'],
+    noEntries: 'Aucune entrée pour ce jour',
+    pickADay: 'Choisissez un jour pour voir vos entrées',
+    edit: 'Modifier',
+    skipped: '(passée)',
+    enterValidEmail: 'Entrez un email valide',
+    pinsDontMatch: 'Les codes ne correspondent pas',
+    confirmPin: 'Confirmez votre code',
+    wrongPin: 'Code incorrect',
+    toast_saved: 'Enregistré',
+    toast_skipped: 'Passé',
+    toast_export: 'Export prêt — dans la vraie app, cela télécharge un fichier',
+    toast_backup: 'Sauvegarde prête — dans la vraie app, cela envoie au cloud',
+    toast_demo: 'Prototype — fonctionnerait dans l\'app native',
+  }
+};
+
+const languageList = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Español' },
+  { code: 'zh-CN', name: '简体中文' },
+  { code: 'zh-TW', name: '繁體中文' },
+  { code: 'yue', name: '粵語' },
+  { code: 'tl', name: 'Tagalog' },
+  { code: 'vi', name: 'Tiếng Việt' },
+  { code: 'fr', name: 'Français' }
+];
+
+// ===== STATE =====
+const state = {
+  onboarded: false,
+  pin: null,
+  pendingPin: '',
+  confirmingPin: false,
+  firstPin: '',
+  email: '',
+  language: 'en',
+  theme: 'light',
+  notifications: { enabled: true, time: '21:00' },
+  adsRemoved: false,
+  customQuestions: [],
+  hiddenQuestions: [],
+  entries: {},
+  currentDate: new Date(),
+  currentQuestionIndex: -1,
+  editingDate: null,
+  calendarMonth: new Date(),
+  selectedCalendarDate: null,
+  currentScreen: 'onboarding',
+  onbStep: 'welcome',
+  lockPin: ''
+};
+
+// Sample entries so calendar isn't empty
+function seedSampleData() {
+  const today = new Date();
+  for (let i = 1; i <= 6; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = dateKey(d);
+    const samples = [
+      ['Oatmeal with berries', 'Grain bowl', 'Pasta with mushrooms', 'Slow afternoon, tired', 'Walked at sunset'],
+      ['Toast and eggs', 'Tuna sandwich', 'Thai curry', '', 'Finished a book I loved'],
+      ['Coffee only', 'Leftover pizza', 'Salmon and rice', 'Missed a call with Mom', 'Dog was extra cuddly'],
+      ['Yogurt', 'Salad from the corner place', 'Tacos with friends', 'Work call ran long', 'Dinner with friends'],
+      ['Pancakes', '', 'Soup', 'Rainy grey day', 'Found an old photo'],
+      ['Smoothie', 'Turkey wrap', 'Homemade pho', 'Forgot to drink water', 'Hit a small work milestone']
+    ];
+    state.entries[key] = samples[i - 1].map(a => a === null ? null : { answer: a, skipped: a === '' ? true : false });
+  }
+}
+
+// ===== HELPERS =====
+function t(key, vars) {
+  const dict = i18n[state.language] || i18n.en;
+  let str = dict[key] || i18n.en[key] || key;
+  if (vars) Object.keys(vars).forEach(k => { str = str.replace(`{${k}}`, vars[k]); });
+  return str;
+}
+
+function dateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getVisibleQuestions() {
+  const questions = [];
+  for (let i = 0; i < 5; i++) {
+    if (!state.hiddenQuestions.includes(i)) {
+      questions.push({ index: i, type: 'default', key: `q${i}`, shortKey: `q${i}short` });
+    }
+  }
+  state.customQuestions.forEach((q, i) => {
+    questions.push({ index: 5 + i, type: 'custom', text: q, shortKey: null });
+  });
+  return questions;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  state.currentScreen = id;
+  if (id === 'today') renderToday();
+  if (id === 'calendar') renderCalendar();
+  if (id === 'settings') renderSettings();
+  renderTabBar();
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.innerHTML = t(key);
+  });
+}
+
+function applyTheme() {
+  document.querySelector('.phone').setAttribute('data-theme', state.theme);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ===== ONBOARDING =====
+function initOnboarding() {
+  // Render language list
+  const list = document.getElementById('langList');
+  list.innerHTML = languageList.map(l => `
+    <div class="option-row${state.language === l.code ? ' selected' : ''}" onclick="selectLanguage('${l.code}')">
+      <span>${l.name}</span>
+      <svg class="option-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+  `).join('');
+
+  // Render PIN pad for onboarding
+  buildPinPad('pinPad', onPinDigit);
+  buildPinPad('lockPinPad', onLockPinDigit);
+}
+
+function selectLanguage(code) {
+  state.language = code;
+  applyTranslations();
+  document.querySelectorAll('#langList .option-row').forEach(r => r.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+function onbNext(step) {
+  if (step === 'pin') {
+    setOnbStep('pin');
+  } else if (step === 'language') {
+    setOnbStep('language');
+  } else if (step === 'email') {
+    setOnbStep('email');
+  } else if (step === 'done') {
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email || !/.+@.+\..+/.test(email)) {
+      document.getElementById('emailError').textContent = t('enterValidEmail');
+      return;
+    }
+    state.email = email;
+    state.onboarded = true;
+    showScreen('today');
+  }
+}
+
+function setOnbStep(step) {
+  state.onbStep = step;
+  document.querySelectorAll('.onb-step').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.onb-step[data-step="${step}"]`).classList.add('active');
+}
+
+function buildPinPad(id, handler) {
+  const pad = document.getElementById(id);
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','del'];
+  pad.innerHTML = keys.map(k => {
+    if (k === '') return `<div class="pin-key empty"></div>`;
+    if (k === 'del') return `<div class="pin-key action" data-key="del">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2zM18 9l-6 6M12 9l6 6"/></svg>
+    </div>`;
+    return `<div class="pin-key" data-key="${k}">${k}</div>`;
+  }).join('');
+  pad.querySelectorAll('.pin-key[data-key]').forEach(el => {
+    el.addEventListener('click', () => handler(el.dataset.key));
+  });
+}
+
+function renderPinDots(containerId, count) {
+  const dots = document.getElementById(containerId).querySelectorAll('.pin-dot');
+  dots.forEach((d, i) => d.classList.toggle('filled', i < count));
+}
+
+function onPinDigit(key) {
+  const errEl = document.getElementById('pinError');
+  errEl.textContent = '';
+  if (key === 'del') {
+    state.pendingPin = state.pendingPin.slice(0, -1);
+  } else if (state.pendingPin.length < 4) {
+    state.pendingPin += key;
+  }
+  renderPinDots('pinDisplay', state.pendingPin.length);
+
+  if (state.pendingPin.length === 4) {
+    setTimeout(() => {
+      if (!state.confirmingPin) {
+        state.firstPin = state.pendingPin;
+        state.pendingPin = '';
+        state.confirmingPin = true;
+        document.querySelector('.onb-step[data-step="pin"] .onb-label').textContent = t('confirmPin');
+        renderPinDots('pinDisplay', 0);
+      } else {
+        if (state.pendingPin === state.firstPin) {
+          state.pin = state.firstPin;
+          state.pendingPin = '';
+          state.confirmingPin = false;
+          onbNext('email');
+        } else {
+          errEl.textContent = t('pinsDontMatch');
+          state.pendingPin = '';
+          state.firstPin = '';
+          state.confirmingPin = false;
+          document.querySelector('.onb-step[data-step="pin"] .onb-label').textContent = t('createPin');
+          renderPinDots('pinDisplay', 0);
+        }
+      }
+    }, 200);
+  }
+}
+
+function onLockPinDigit(key) {
+  const errEl = document.getElementById('lockError');
+  errEl.textContent = '';
+  if (key === 'del') {
+    state.lockPin = state.lockPin.slice(0, -1);
+  } else if (state.lockPin.length < 4) {
+    state.lockPin += key;
+  }
+  renderPinDots('lockPinDisplay', state.lockPin.length);
+
+  if (state.lockPin.length === 4) {
+    setTimeout(() => {
+      if (state.lockPin === state.pin) {
+        state.lockPin = '';
+        renderPinDots('lockPinDisplay', 0);
+        showScreen('today');
+      } else {
+        errEl.textContent = t('wrongPin');
+        state.lockPin = '';
+        renderPinDots('lockPinDisplay', 0);
+      }
+    }, 200);
+  }
+}
+
+function showForgotPin() {
+  showToast(t('toast_demo'));
+}
+
+// ===== TODAY (floating orbs) =====
+function renderToday() {
+  // Date label
+  const d = new Date();
+  const locale = state.language.startsWith('zh') || state.language === 'yue' ? 'zh' :
+                 state.language === 'tl' ? 'fil' :
+                 state.language;
+  try {
+    document.getElementById('todayDate').textContent = d.toLocaleDateString(locale, {
+      weekday: 'long', month: 'long', day: 'numeric'
+    });
+  } catch (e) {
+    document.getElementById('todayDate').textContent = d.toLocaleDateString('en', {
+      weekday: 'long', month: 'long', day: 'numeric'
+    });
+  }
+
+  // Today title
+  document.querySelector('#today .today-title').textContent = t('todayTitle');
+
+  // Questions
+  const questions = getVisibleQuestions();
+  const today = dateKey(new Date());
+  if (!state.entries[today]) state.entries[today] = [];
+
+  // Progress
+  const completedCount = state.entries[today].filter(e => e && !e.skipped && e.answer).length;
+  const progressEl = document.getElementById('todayProgress');
+  if (completedCount === questions.length && questions.length > 0) {
+    progressEl.textContent = t('allDone');
+  } else {
+    progressEl.textContent = t('completed', { n: completedCount, t: questions.length });
+  }
+
+  // Render orbs at poetic positions
+  const field = document.getElementById('orbField');
+  field.innerHTML = '';
+
+  // Positions as percentages (x, y) - carefully placed, organic, non-grid
+  const positions = [
+    { x: 22, y: 22, size: 120 },
+    { x: 68, y: 18, size: 110 },
+    { x: 78, y: 52, size: 130 },
+    { x: 18, y: 58, size: 115 },
+    { x: 50, y: 78, size: 125 }
+  ];
+
+  questions.forEach((q, idx) => {
+    const pos = positions[idx % positions.length];
+    const entry = state.entries[today][q.index];
+    const isCompleted = entry && !entry.skipped && entry.answer;
+    const isSkipped = entry && entry.skipped;
+
+    const orb = document.createElement('div');
+    orb.className = 'orb';
+    if (isCompleted) orb.classList.add('completed');
+    if (isSkipped) orb.classList.add('skipped');
+    orb.dataset.q = q.type === 'default' ? q.index : (q.index % 5);
+    orb.style.left = `calc(${pos.x}% - ${pos.size/2}px)`;
+    orb.style.top = `calc(${pos.y}% - ${pos.size/2}px + 50px)`;
+    orb.style.width = pos.size + 'px';
+    orb.style.height = pos.size + 'px';
+
+    const label = q.type === 'default' ? t(q.shortKey) : q.text.slice(0, 12);
+    orb.innerHTML = `<span>${label}</span>`;
+
+    orb.addEventListener('click', () => openQuestion(q.index, questions.indexOf(q)));
+
+    // Gentle floating animation - randomize so they don't sync
+    const delay = (idx * 0.4).toFixed(1);
+    const duration = (4 + idx * 0.3).toFixed(1);
+    orb.style.animation = `floatPulse ${duration}s ease-in-out ${delay}s infinite`;
+
+    field.appendChild(orb);
+  });
+}
+
+// ===== QUESTION SCREEN =====
+function openQuestion(qIndex, listIndex) {
+  state.currentQuestionIndex = qIndex;
+  const target = state.editingDate || dateKey(new Date());
+  state.editingDate = state.editingDate; // preserve or null
+
+  showScreen('question');
+
+  const questions = getVisibleQuestions();
+  const q = questions.find(x => x.index === qIndex);
+
+  // Orb preview
+  const orb = document.getElementById('questionOrb');
+  const colorIdx = q.type === 'default' ? q.index : (q.index % 5);
+  const colors = ['var(--orb-breakfast)', 'var(--orb-lunch)', 'var(--orb-dinner)', 'var(--orb-low)', 'var(--orb-highlight)'];
+  orb.style.background = colors[colorIdx];
+
+  // Question text
+  document.getElementById('questionText').innerHTML = q.type === 'default' ? t(`q${q.index}`) : q.text;
+
+  // Kicker
+  const kicker = q.type === 'default' ? t(`kicker${q.index}`) : '';
+  document.getElementById('questionKicker').textContent = kicker;
+
+  // Dots (progress through questions)
+  const dots = document.getElementById('questionDots');
+  dots.innerHTML = questions.map((qq, i) => {
+    const entry = (state.entries[target] || [])[qq.index];
+    const done = entry && (entry.answer || entry.skipped);
+    const active = qq.index === qIndex;
+    return `<div class="question-dot${active ? ' active' : done ? ' done' : ''}"></div>`;
+  }).join('');
+
+  // Existing answer
+  const existing = (state.entries[target] || [])[qIndex];
+  const input = document.getElementById('answerInput');
+  input.value = existing && existing.answer ? existing.answer : '';
+  setTimeout(() => input.focus(), 300);
+}
+
+function closeQuestion() {
+  if (state.editingDate) {
+    const backTo = state.editingDate;
+    state.editingDate = null;
+    state.selectedCalendarDate = backTo;
+    showScreen('calendar');
+  } else {
+    showScreen('today');
+  }
+}
+
+function saveAnswer() {
+  const target = state.editingDate || dateKey(new Date());
+  if (!state.entries[target]) state.entries[target] = [];
+  const answer = document.getElementById('answerInput').value.trim();
+  state.entries[target][state.currentQuestionIndex] = {
+    answer: answer,
+    skipped: false
+  };
+  showToast(t('toast_saved'));
+  setTimeout(() => advanceOrClose(), 300);
+}
+
+function skipQuestion() {
+  const target = state.editingDate || dateKey(new Date());
+  if (!state.entries[target]) state.entries[target] = [];
+  state.entries[target][state.currentQuestionIndex] = {
+    answer: '',
+    skipped: true
+  };
+  showToast(t('toast_skipped'));
+  setTimeout(() => advanceOrClose(), 300);
+}
+
+function advanceOrClose() {
+  if (state.editingDate) {
+    state.editingDate = null;
+    state.selectedCalendarDate = state.editingDate || state.selectedCalendarDate;
+    showScreen('calendar');
+    return;
+  }
+  // Find next unanswered question
+  const questions = getVisibleQuestions();
+  const target = dateKey(new Date());
+  const nextQ = questions.find(q => {
+    const e = (state.entries[target] || [])[q.index];
+    return !e || (!e.answer && !e.skipped);
+  });
+  if (nextQ) {
+    openQuestion(nextQ.index);
+  } else {
+    showScreen('today');
+  }
+}
+
+// ===== CALENDAR =====
+function changeMonth(delta) {
+  state.calendarMonth.setMonth(state.calendarMonth.getMonth() + delta);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const dict = i18n[state.language] || i18n.en;
+  const year = state.calendarMonth.getFullYear();
+  const month = state.calendarMonth.getMonth();
+  document.getElementById('calMonthLabel').textContent = `${dict.monthNames[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = dateKey(new Date());
+
+  let html = '';
+  dict.dowShort.forEach(d => { html += `<div class="cal-dow">${d}</div>`; });
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(year, month, day);
+    const key = dateKey(d);
+    const entries = state.entries[key];
+    const hasEntries = entries && entries.some(e => e && e.answer);
+    const isToday = key === today;
+    const isSelected = key === state.selectedCalendarDate;
+
+    let dots = '';
+    if (entries) {
+      dots = '<div class="dots">';
+      for (let q = 0; q < 5; q++) {
+        const e = entries[q];
+        if (e && e.answer) {
+          const colors = ['var(--orb-breakfast-deep)','var(--orb-lunch-deep)','var(--orb-dinner-deep)','var(--orb-low-deep)','var(--orb-highlight-deep)'];
+          dots += `<div class="dot" style="background: ${colors[q]}"></div>`;
+        }
+      }
+      dots += '</div>';
+    }
+
+    html += `<div class="cal-day${hasEntries ? ' has-entries' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" onclick="selectCalDay('${key}')">
+      <span>${day}</span>
+      ${dots}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+
+  // Day detail
+  renderCalDayDetail();
+}
+
+function selectCalDay(key) {
+  state.selectedCalendarDate = key;
+  renderCalendar();
+}
+
+function renderCalDayDetail() {
+  const detail = document.getElementById('calDayDetail');
+  if (!state.selectedCalendarDate) {
+    detail.innerHTML = `<div style="text-align:center; color: var(--ink-faint); font-size: 13px; padding: 20px 0;">${t('pickADay')}</div>`;
+    return;
+  }
+  const key = state.selectedCalendarDate;
+  const d = new Date(key + 'T12:00:00');
+  const dict = i18n[state.language] || i18n.en;
+  const dateLabel = `${dict.monthNames[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  const entries = state.entries[key] || [];
+  const questions = getVisibleQuestions();
+
+  let html = `<div class="cal-day-title">${dateLabel}</div>`;
+
+  if (!entries.some(e => e && (e.answer || e.skipped))) {
+    html += `<div style="text-align:center; color: var(--ink-faint); font-size: 13px; padding: 20px 0;">${t('noEntries')}</div>`;
+  } else {
+    questions.forEach((q) => {
+      const e = entries[q.index];
+      if (!e || (!e.answer && !e.skipped)) return;
+      const label = q.type === 'default' ? t(q.shortKey) : q.text.slice(0, 20);
+      const colorIdx = q.type === 'default' ? q.index : (q.index % 5);
+      const colors = ['var(--orb-breakfast)','var(--orb-lunch)','var(--orb-dinner)','var(--orb-low)','var(--orb-highlight)'];
+      const answerText = e.skipped ? t('skipped') : e.answer;
+      const emptyClass = e.skipped ? 'empty' : '';
+      html += `<div class="cal-entry" onclick="editEntry('${key}', ${q.index})">
+        <div class="cal-entry-orb" style="background: ${colors[colorIdx]}"></div>
+        <div class="cal-entry-content">
+          <div class="cal-entry-q">${label}</div>
+          <div class="cal-entry-a ${emptyClass}">${answerText}</div>
+        </div>
+      </div>`;
+    });
+  }
+  detail.innerHTML = html;
+}
+
+function editEntry(dateKeyStr, qIndex) {
+  state.editingDate = dateKeyStr;
+  openQuestion(qIndex);
+}
+
+// ===== SETTINGS =====
+function renderSettings() {
+  document.querySelector('#settings h1').textContent = t('settingsTitle');
+  const content = document.getElementById('settingsContent');
+  const dict = i18n[state.language] || i18n.en;
+  const currentLang = languageList.find(l => l.code === state.language);
+
+  const ua = state.adsRemoved ? '' : `
+    <div class="upgrade-card" onclick="removeAds()">
+      <div class="upgrade-title">${t('removeAds')}</div>
+      <div class="upgrade-sub">${t('removeAdsSub')}</div>
+    </div>
+  `;
+
+  content.innerHTML = `
+    ${ua}
+
+    <div class="settings-section">
+      <h3>${t('appearance')}</h3>
+      <div class="settings-group">
+        <div class="settings-row" onclick="toggleTheme()">
+          <div class="settings-row-main">
+            <div class="settings-row-label">${t('darkMode')}</div>
+          </div>
+          <div class="toggle${state.theme === 'dark' ? ' on' : ''}"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>${t('notifications')}</h3>
+      <div class="settings-group">
+        <div class="settings-row" onclick="toggleNotifications()">
+          <div class="settings-row-main">
+            <div class="settings-row-label">${t('dailyReminder')}</div>
+          </div>
+          <div class="toggle${state.notifications.enabled ? ' on' : ''}"></div>
+        </div>
+        ${state.notifications.enabled ? `
+        <div class="settings-row" onclick="openTimePicker()">
+          <div class="settings-row-main">
+            <div class="settings-row-label">${t('reminderTime')}</div>
+            <div class="settings-row-value">${state.notifications.time}</div>
+          </div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>${t('language')}</h3>
+      <div class="settings-group">
+        <div class="settings-row" onclick="openLanguagePicker()">
+          <div class="settings-row-main">
+            <div class="settings-row-label">${t('language')}</div>
+            <div class="settings-row-value">${currentLang ? currentLang.name : 'English'}</div>
+          </div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>${t('questions')}</h3>
+      <div class="settings-group">
+        <div class="settings-row" onclick="openQuestionsEditor()">
+          <div class="settings-row-main">
+            <div class="settings-row-label">${t('customizeQuestions')}</div>
+            <div class="settings-row-value">${getVisibleQuestions().length} active</div>
+          </div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>${t('security')}</h3>
+      <div class="settings-group">
+        <div class="settings-row" onclick="showToast(t('toast_demo'))">
+          <div class="settings-row-main">
+            <div class="settings-row-label">${t('changePin')}</div>
+          </div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="settings-row" onclick="openEmailEditor()">
+          <div class="settings-row-main">
+            <div class="settings-row-label">${t('recoveryEmailLabel')}</div>
+            <div class="settings-row-value">${state.email}</div>
+          </div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>${t('data')}</h3>
+      <div class="settings-group">
+        <div class="settings-row" onclick="showToast(t('toast_export'))">
+          <div class="settings-row-main"><div class="settings-row-label">${t('exportCsv')}</div></div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </div>
+        <div class="settings-row" onclick="showToast(t('toast_export'))">
+          <div class="settings-row-main"><div class="settings-row-label">${t('exportTxt')}</div></div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </div>
+        <div class="settings-row" onclick="showToast(t('toast_backup'))">
+          <div class="settings-row-main"><div class="settings-row-label">${t('backup')}</div></div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        </div>
+        <div class="settings-row" onclick="showToast(t('toast_backup'))">
+          <div class="settings-row-main"><div class="settings-row-label">${t('restore')}</div></div>
+          <svg class="settings-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9M3 4v5h5"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>${t('about')}</h3>
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="settings-row-main">
+            <div class="settings-row-label">Highlight</div>
+            <div class="settings-row-value">${t('version')}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Hide ad if removed
+  const ad = document.querySelector('#settings .ad-banner');
+  if (ad) ad.style.display = state.adsRemoved ? 'none' : 'flex';
+}
+
+function toggleTheme() {
+  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  applyTheme();
+  renderSettings();
+}
+
+function toggleNotifications() {
+  state.notifications.enabled = !state.notifications.enabled;
+  renderSettings();
+}
+
+function openTimePicker() {
+  const times = ['07:00','08:00','09:00','12:00','18:00','20:00','21:00','22:00'];
+  openModal(t('reminderTime'), '', `
+    <div class="option-list">
+      ${times.map(tm => `
+        <div class="option-row${state.notifications.time === tm ? ' selected' : ''}" onclick="setReminderTime('${tm}')">
+          <span>${tm}</span>
+          <svg class="option-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+      `).join('')}
+    </div>
+  `);
+}
+function setReminderTime(tm) {
+  state.notifications.time = tm;
+  closeModal();
+  renderSettings();
+}
+
+function openLanguagePicker() {
+  openModal(t('language'), '', `
+    <div class="option-list">
+      ${languageList.map(l => `
+        <div class="option-row${state.language === l.code ? ' selected' : ''}" onclick="setLanguage('${l.code}')">
+          <span>${l.name}</span>
+          <svg class="option-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+      `).join('')}
+    </div>
+  `);
+}
+function setLanguage(code) {
+  state.language = code;
+  applyTranslations();
+  closeModal();
+  renderSettings();
+  renderTabBar();
+}
+
+function openQuestionsEditor() {
+  const defaultQs = [0,1,2,3,4];
+  openModal(t('customizeQuestions'), '', `
+    <div class="option-list">
+      ${defaultQs.map(i => {
+        const visible = !state.hiddenQuestions.includes(i);
+        return `<div class="option-row" onclick="toggleDefaultQ(${i})">
+          <span>${t(`q${i}short`)}</span>
+          <div class="toggle${visible ? ' on' : ''}"></div>
+        </div>`;
+      }).join('')}
+      ${state.customQuestions.map((q, i) => `
+        <div class="option-row">
+          <span>${q}</span>
+          <span style="color:#d4634d; font-size:13px; cursor:pointer;" onclick="removeCustomQ(${i}); event.stopPropagation();">✕</span>
+        </div>
+      `).join('')}
+      <div style="margin-top: 12px; display: flex; gap: 8px;">
+        <input type="text" class="text-input" id="newQInput" placeholder="${t('addCustomQ')}" style="flex:1;">
+        <button class="btn btn-accent" style="width:auto; padding: 16px 20px;" onclick="addCustomQ()">+</button>
+      </div>
+    </div>
+  `);
+}
+function toggleDefaultQ(i) {
+  if (state.hiddenQuestions.includes(i)) {
+    state.hiddenQuestions = state.hiddenQuestions.filter(x => x !== i);
+  } else {
+    state.hiddenQuestions.push(i);
+  }
+  openQuestionsEditor();
+}
+function addCustomQ() {
+  const input = document.getElementById('newQInput');
+  const val = input.value.trim();
+  if (val) {
+    state.customQuestions.push(val);
+    openQuestionsEditor();
+  }
+}
+function removeCustomQ(i) {
+  state.customQuestions.splice(i, 1);
+  openQuestionsEditor();
+}
+
+function openEmailEditor() {
+  openModal(t('recoveryEmailLabel'), '', `
+    <input type="email" class="text-input" id="newEmailInput" value="${state.email}" style="margin-bottom: 16px;">
+    <button class="btn" onclick="saveEmail()">${t('saveBtn')}</button>
+  `);
+}
+function saveEmail() {
+  const val = document.getElementById('newEmailInput').value.trim();
+  if (/.+@.+\..+/.test(val)) {
+    state.email = val;
+    closeModal();
+    renderSettings();
+    showToast(t('toast_saved'));
+  }
+}
+
+function removeAds() {
+  openModal(t('removeAds'), t('removeAdsSub'), `
+    <button class="btn btn-accent" onclick="confirmRemoveAds()">$4 — ${t('removeAds')}</button>
+    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+  `);
+}
+function confirmRemoveAds() {
+  state.adsRemoved = true;
+  closeModal();
+  // Hide all ads
+  document.querySelectorAll('.ad-banner').forEach(a => a.style.display = 'none');
+  renderSettings();
+  showToast(t('adsRemoved'));
+}
+
+// ===== MODAL =====
+function openModal(title, sub, body) {
+  const mb = document.getElementById('modalBody');
+  mb.innerHTML = `
+    <div class="modal-handle"></div>
+    ${title ? `<div class="modal-title">${title}</div>` : ''}
+    ${sub ? `<div class="modal-sub">${sub}</div>` : ''}
+    ${body}
+  `;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+// ===== TAB BAR =====
+function renderTabBar() {
+  const tabs = [
+    { id: 'today', icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></svg>`, label: t('tabToday') },
+    { id: 'calendar', icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`, label: t('tabCalendar') },
+    { id: 'settings', icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`, label: t('tabSettings') }
+  ];
+  document.querySelectorAll('.tab-bar').forEach(bar => {
+    bar.innerHTML = tabs.map(tab => `
+      <button class="tab${state.currentScreen === tab.id ? ' active' : ''}" onclick="showScreen('${tab.id}')">
+        ${tab.icon}
+        <span class="tab-label">${tab.label}</span>
+      </button>
+    `).join('');
+  });
+
+  // Hide ads if removed
+  if (state.adsRemoved) {
+    document.querySelectorAll('.ad-banner').forEach(a => a.style.display = 'none');
+  }
+}
+
+// ===== INIT =====
+function updateStatusTime() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('statusTime').textContent = `${h}:${m}`;
+}
+setInterval(updateStatusTime, 30000);
+updateStatusTime();
+
+seedSampleData();
+initOnboarding();
+applyTranslations();
+applyTheme();
+showScreen('onboarding');
+</script>
+</body>
+</html>
